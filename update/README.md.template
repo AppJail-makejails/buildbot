@@ -29,7 +29,7 @@ appjail start buildbot-master
 
 #### Arguments
 
-* `buildbot_master_tag` (default: `13.4-master`): see [#tags](#tags).
+* `buildbot_master_tag` (default: `%%TAG1%%-master`): see [#tags](#tags).
 * `buildbot_master_ajspec` (default: `gh+AppJail-makejails/buildbot`): Entry point where the `appjail-ajspec(5)` file is located.
 
 #### Environment
@@ -57,7 +57,7 @@ appjail start buildbot-worker
 
 #### Arguments
 
-* `buildbot_worker_tag` (default: `13.4-worker`): see [#tags](#tags).
+* `buildbot_worker_tag` (default: `%%TAG1%%-worker`): see [#tags](#tags).
 * `buildbot_worker_ajspec` (default: `gh+AppJail-makejails/buildbot`): Entry point where the `appjail-ajspec(5)` file is located.
 
 #### Environment
@@ -105,7 +105,7 @@ appjail run -s buildbot_log buildbot
 
 | Tag    | Arch    | Version        | Type   |
 | ------ | ------- | -------------- | ------ |
-| `13.4-master` | `amd64` | `13.4-RELEASE` | `thin` |
-| `13.4-worker` | `amd64` | `13.4-RELEASE` | `thin` |
-| `14.2-master` | `amd64` | `14.2-RELEASE` | `thin` |
-| `14.2-worker` | `amd64` | `14.2-RELEASE` | `thin` |
+| `%%TAG1%%-master` | `amd64` | `%%TAG1%%-RELEASE` | `thin` |
+| `%%TAG1%%-worker` | `amd64` | `%%TAG1%%-RELEASE` | `thin` |
+| `%%TAG2%%-master` | `amd64` | `%%TAG2%%-RELEASE` | `thin` |
+| `%%TAG2%%-worker` | `amd64` | `%%TAG2%%-RELEASE` | `thin` |

@@ -1,0 +1,1 @@
+OPTION volume=buildbot-db mountpoint:/var/db/buildbot owner:870 group:870

@@ -1,0 +1,44 @@
+INCLUDE options/options.makejail
+
+ARG buildbot_master_tag=%%TAG1%%-master
+ARG buildbot_master_ajspec=gh+AppJail-makejails/buildbot
+
+FROM --entrypoint "${buildbot_master_ajspec}" buildbot:${buildbot_master_tag}
+
+COPY scripts
+
+RUN --juser buildbot /scripts/setup-master.sh
+
+CMD rm -rf /scripts
+
+STOP
+
+STAGE start
+
+WORKDIR /var/db/buildbot
+
+RUN daemon \
+        -t "Continuous Integration Framework (master)" \
+        -p /var/run/buildbot.pid \
+        -o /var/log/buildbot.log \
+        -u buildbot \
+            buildbot start \
+                --nodaemon
+
+STAGE stop
+
+WORKDIR /var/db/buildbot
+
+RUN --juser buildbot buildbot stop
+
+STAGE custom:buildbot_status
+
+CMD if [ -f "/var/run/buildbot.pid" ]; then \
+        top -ap `head -1 /var/run/buildbot.pid`; \
+    fi
+
+STAGE custom:buildbot_log
+
+CMD if [ -f "/var/log/buildbot.log" ]; then \
+        less -R /var/log/buildbot.log; \
+    fi
