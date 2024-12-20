@@ -7,9 +7,15 @@ FROM --entrypoint "${buildbot_master_ajspec}" buildbot:${buildbot_master_tag}
 
 COPY scripts
 
-RUN --juser buildbot /scripts/setup-master.sh
+USER buildbot
+RUN --maintain-env /scripts/setup-master.sh
 
 CMD rm -rf /scripts
+
+RAW if appjail cmd jexec "${APPJAIL_JAILNAME}" [ ! -f /var/db/buildbot/master.cfg ]; then
+    COPY files/master.cfg /var/db/buildbot/master.cfg
+    CMD chown buildbot:buildbot /var/db/buildbot/master.cfg
+RAW fi
 
 STOP
 
@@ -29,7 +35,8 @@ STAGE stop
 
 WORKDIR /var/db/buildbot
 
-RUN --juser buildbot buildbot stop
+USER buildbot
+RUN --maintain-env buildbot stop
 
 STAGE custom:buildbot_status
 

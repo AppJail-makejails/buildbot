@@ -2,6 +2,7 @@
 
 set -e
 
+dbdir="/var/db/buildbot"
 admin="${BUILDBOT_INFO_ADMIN}"
 host="${BUILDBOT_INFO_HOST}"
 keepalive="${BUILDBOT_KEEPALIVE:-600}"
@@ -19,7 +20,7 @@ master="${BUILDBOT_MASTER}"
 name="${BUILDBOT_WORKER_NAME}"
 pass="${BUILDBOT_WORKER_PASS}"
 
-if [ -n "${BUILDBOT_FORCE}" ] || [ `ls -1 /var/db/buildbot | wc -l` -eq 0 ]; then
+if [ -n "${BUILDBOT_FORCE}" ] || [ `ls -1 "${dbdir}" | wc -l` -eq 0 ]; then
     set --
 
     if [ -n "${keepalive}" ]; then
@@ -75,5 +76,13 @@ if [ -n "${BUILDBOT_FORCE}" ] || [ `ls -1 /var/db/buildbot | wc -l` -eq 0 ]; the
         exit 1
     fi
 
-    buildbot-worker create-worker "$@" /var/db/buildbot "${master}" "${name}" "${pass}"
+    buildbot-worker create-worker "$@" "${dbdir}" "${master}" "${name}" "${pass}"
+
+    if [ -n "${admin}" ] && [ -d "${dbdir}/info" ]; then
+        echo "${admin}" > "${dbdir}/info/admin"
+    fi
+
+    if [ -n "${host}" ] && [ -d "${dbdir}/info" ]; then
+        echo "${host}" > "${dbdir}/info/host"
+    fi
 fi

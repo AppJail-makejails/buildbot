@@ -7,7 +7,8 @@ FROM --entrypoint "${buildbot_worker_ajspec}" buildbot:${buildbot_worker_tag}
 
 COPY scripts
 
-RUN --juser buildbot /scripts/setup-worker.sh
+USER buildbot
+RUN --maintain-env /scripts/setup-worker.sh
 
 CMD rm -rf /scripts
 
@@ -29,7 +30,8 @@ STAGE stop
 
 WORKDIR /var/db/buildbot
 
-RUN --juser buildbot buildbot-worker stop
+USER buildbot
+RUN --maintain-env buildbot-worker stop
 
 STAGE custom:buildbot_status
 

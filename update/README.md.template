@@ -24,7 +24,9 @@ appjail makejail \
     -o expose=8010 \
     -o expose=80 \
     -o fstab="$PWD/.volumes/buildbot-master/db buildbot-db <volumefs>"
-appjail start buildbot-master
+appjail start \
+    -V BUILDBOT_WEB_URL="http://buildbot-master:8010/" \
+    buildbot-master
 ```
 
 #### Arguments
@@ -32,13 +34,26 @@ appjail start buildbot-master
 * `buildbot_master_tag` (default: `%%TAG1%%-master`): see [#tags](#tags).
 * `buildbot_master_ajspec` (default: `gh+AppJail-makejails/buildbot`): Entry point where the `appjail-ajspec(5)` file is located.
 
-#### Environment
+#### Environment (stage: build)
 
 * `BUILDBOT_CONFIG` (default: `master.cfg`): Name of the buildmaster config file.
 * `BUILDBOT_DB` (default: `sqlite:///state.sqlite`): Which DB to use for scheduler/status state.
 * `BUILDBOT_LOG_COUNT` (default: `10`): Limit the number of kept old twisted log files
 * `BUILDBOT_LOG_SIZE` (default: `10000000`): Size at which to rotate twisted log files
 * `BUILDBOT_NOLOGROTATE` (optional): Do not permit buildmaster rotate logs by itself.
+
+#### Environment (stage: start)
+
+The following environment variables are only available if the Makejail has copied the `master.cfg` file from this repository, but remember that you can put any environment variable you want in your own file.
+
+* `BUILDBOT_WORKER_NAME` (default: `example-worker`).
+* `BUILDBOT_WORKER_PASS` (default: `pass`).
+* `BUILDBOT_WORKER_PORT` (default: `9989`).
+* `BUILDBOT_WEB_TITLE` (default: `Hello World CI`).
+* `BUILDBOT_WEB_TITLEURL` (default: `https://buildbot.github.io/hello-world/`).
+* `BUILDBOT_WEB_URL` (default: `http://localhost:8010/`).
+* `BUILDBOT_WEB_PORT` (default: `8010`).
+* `BUILDBOT_DB` (default: `sqlite:///state.sqlite`).
 
 ### worker
 
@@ -49,10 +64,12 @@ appjail makejail \
     -f "gh+AppJail-makejails/buildbot --file worker.makejail" \
     -o virtualnet=":<random> default" \
     -o nat \
+    -o fstab="$PWD/.volumes/buildbot-worker/db buildbot-db <volumefs>" \
     -V BUILDBOT_MASTER="buildbot-master" \
     -V BUILDBOT_WORKER_NAME="example-worker" \
     -V BUILDBOT_WORKER_PASS="pass"
 appjail start buildbot-worker
+appjail pkg jail buildbot-worker install -y git-tiny # if you want to use git(1)
 ```
 
 #### Arguments
