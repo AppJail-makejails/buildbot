@@ -27,6 +27,7 @@ appjail makejail \
 appjail start \
     -V BUILDBOT_WEB_URL="http://buildbot-master:8010/" \
     buildbot-master
+appjail pkg jail buildbot-master install -y git-tiny # if you want to use git(1)
 ```
 
 #### Arguments
