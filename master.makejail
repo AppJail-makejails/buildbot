@@ -1,6 +1,6 @@
 INCLUDE options/options.makejail
 
-ARG buildbot_master_tag=13.4-master
+ARG buildbot_master_tag=13.5-master
 ARG buildbot_master_ajspec=gh+AppJail-makejails/buildbot
 
 FROM --entrypoint "${buildbot_master_ajspec}" buildbot:${buildbot_master_tag}

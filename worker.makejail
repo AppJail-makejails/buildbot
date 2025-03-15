@@ -1,6 +1,6 @@
 INCLUDE options/options.makejail
 
-ARG buildbot_worker_tag=13.4-worker
+ARG buildbot_worker_tag=13.5-worker
 ARG buildbot_worker_ajspec=gh+AppJail-makejails/buildbot
 
 FROM --entrypoint "${buildbot_worker_ajspec}" buildbot:${buildbot_worker_tag}
