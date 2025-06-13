@@ -125,5 +125,5 @@ appjail run -s buildbot_log buildbot-master # or buildbot-worker
 | ------ | ------- | -------------- | ------ |
 | `13.5-master` | `amd64` | `13.5-RELEASE` | `thin` |
 | `13.5-worker` | `amd64` | `13.5-RELEASE` | `thin` |
-| `14.2-master` | `amd64` | `14.2-RELEASE` | `thin` |
-| `14.2-worker` | `amd64` | `14.2-RELEASE` | `thin` |
+| `14.3-master` | `amd64` | `14.3-RELEASE` | `thin` |
+| `14.3-worker` | `amd64` | `14.3-RELEASE` | `thin` |
