@@ -32,7 +32,7 @@ appjail pkg jail buildbot-master install -y git-tiny # if you want to use git(1)
 
 #### Arguments
 
-* `buildbot_master_tag` (default: `13.5-master`): see [#tags](#tags).
+* `buildbot_master_tag` (default: `14.3-master`): see [#tags](#tags).
 * `buildbot_master_ajspec` (default: `gh+AppJail-makejails/buildbot`): Entry point where the `appjail-ajspec(5)` file is located.
 
 #### Environment (stage: build)
@@ -75,7 +75,7 @@ appjail pkg jail buildbot-worker install -y git-tiny # if you want to use git(1)
 
 #### Arguments
 
-* `buildbot_worker_tag` (default: `13.5-worker`): see [#tags](#tags).
+* `buildbot_worker_tag` (default: `14.3-worker`): see [#tags](#tags).
 * `buildbot_worker_ajspec` (default: `gh+AppJail-makejails/buildbot`): Entry point where the `appjail-ajspec(5)` file is located.
 
 #### Environment
@@ -123,7 +123,7 @@ appjail run -s buildbot_log buildbot-master # or buildbot-worker
 
 | Tag    | Arch    | Version        | Type   |
 | ------ | ------- | -------------- | ------ |
-| `13.5-master` | `amd64` | `13.5-RELEASE` | `thin` |
-| `13.5-worker` | `amd64` | `13.5-RELEASE` | `thin` |
 | `14.3-master` | `amd64` | `14.3-RELEASE` | `thin` |
 | `14.3-worker` | `amd64` | `14.3-RELEASE` | `thin` |
+| `15-master` | `amd64` | `15` | `thin` |
+| `15-worker` | `amd64` | `15` | `thin` |
