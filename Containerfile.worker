@@ -1,0 +1,39 @@
+
+# vim: set syntax=dockerfile:
+
+ARG FREEBSD_RELEASE
+
+FROM ghcr.io/appjail-makejails/core:${FREEBSD_RELEASE}
+
+ARG PYVER
+ARG NO_PKGCLEAN
+
+LABEL org.opencontainers.image.title="Buildbot" \
+    org.opencontainers.image.description="Continuous Integration Framework" \
+    org.opencontainers.image.source="https://github.com/AppJail-makejails/buildbot" \
+    org.opencontainers.image.url="https://github.com/AppJail-makejails/buildbot" \
+    org.opencontainers.image.vendor="DtxdF" \
+    org.opencontainers.image.authors="Jesús Daniel Colmenares Oviedo <dtxdf@disroot.org>"
+
+RUN set -xe; \
+    \
+    pkg update; \
+    pkg install -y py${PYVER}-buildbot-worker; \
+    \
+    if [ -z "${NO_PKGCLEAN}" ]; then \
+        pkg clean -a; \
+        rm -rf /var/cache/pkg/*; \
+    fi; \
+    rm -rf /var/db/pkg/repos/*
+
+RUN mkdir -p /buildbot /src
+
+COPY worker/buildbot.tac /src
+
+COPY worker/entrypoint.sh /
+
+RUN chmod +x /entrypoint.sh
+
+WORKDIR /buildbot
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["twistd", "--pidfile=", "-ny", "buildbot.tac"]

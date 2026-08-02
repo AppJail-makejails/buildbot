@@ -1,129 +1,87 @@
-# BuildBot
+# Buildbot
 
-The BuildBot is a system to automate the compile/test cycle required by most software projects to validate code changes. By automatically rebuilding and testing the tree each time something has changed, build problems are pinpointed quickly, before other developers are inconvenienced by the failure. The guilty developer can be identified and harassed without human intervention. By running the builds on a variety of platforms, developers who do not have the facilities to test their changes everywhere before checkin will at least know shortly afterwards whether they have broken the build or not.
+Buildbot is a system to automate the compile/test cycle required by most software projects to validate code changes. By automatically rebuilding and testing the tree each time something has changed, build problems are pinpointed quickly, before other developers are inconvenienced by the failure. The guilty developer can be identified and harassed without human intervention. By running the builds on a variety of platforms, developers who do not have the facilities to test their changes everywhere before checkin will at least know shortly afterwards whether they have broken the build or not.
 
-buildbot.net
+wikipedia.org/wiki/Buildbot
 
-<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/Buildbot_logo.svg/2048px-Buildbot_logo.svg.png" alt="buildbot logo" width="30%" height="auto">
+<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/57/Buildbot_logo.svg/250px-Buildbot_logo.svg.png" width="30%" height="auto" alt="Buildbot logo">
 
 ## How to use this Makejail
 
-The master and worker use the `/var/db/buildbot` directory to put files only if there are no files or if the `BUILDBOT_FORCE` environment variable is set, so this means that you can mount your directory with the corresponding BuildBot files to suit your needs. If you mount a directory and there are files, the environment variables have no effect unless the `BUILDBOT_FORCE` environment variable is set.
+Both the master and the worker may require external dependencies. You can create a new OCI image with the dependencies you need or use the `pkg` option as shown below.
 
-**Note**: You can use environment variables in your configuration files (e.g. `os.getenv(...)`) using the `appjail-start(1)` `-V` parameter.
+**Master**:
 
-### master
-
-```sh
-mkdir -p .volumes/buildbot-master/db
-appjail makejail \
-    -j buildbot-master \
-    -f gh+AppJail-makejails/buildbot \
+```console
+$ appjail oci run -Pd \
+    -o overwrite=force \
     -o virtualnet=":<random> default" \
     -o nat \
-    -o expose=8010 \
-    -o expose=80 \
-    -o fstab="$PWD/.volumes/buildbot-master/db buildbot-db <volumefs>"
-appjail start \
-    -V BUILDBOT_WEB_URL="http://buildbot-master:8010/" \
-    buildbot-master
-appjail pkg jail buildbot-master install -y git-tiny # if you want to use git(1)
+    -e BUILDBOT_CONFIG_DIR=/config \
+    -e BUILDBOT_CONFIG_URL=https://github.com/buildbot/buildbot-docker-example-config/archive/master.tar.gz \
+    -e BUILDBOT_WORKER_PORT=9989 \
+    -e BUILDBOT_WEB_URL=http://buildbot-master:8010/ \
+    -e BUILDBOT_WEB_PORT=tcp:port=8010 \
+    -o pkg=git-tiny \
+    ghcr.io/appjail-makejails/buildbot buildbot-master
 ```
 
-#### Arguments
+**Worker**:
 
-* `buildbot_master_tag` (default: `14.3-master`): see [#tags](#tags).
-* `buildbot_master_ajspec` (default: `gh+AppJail-makejails/buildbot`): Entry point where the `appjail-ajspec(5)` file is located.
-
-#### Environment (stage: build)
-
-* `BUILDBOT_CONFIG` (default: `master.cfg`): Name of the buildmaster config file.
-* `BUILDBOT_DB` (default: `sqlite:///state.sqlite`): Which DB to use for scheduler/status state.
-* `BUILDBOT_LOG_COUNT` (default: `10`): Limit the number of kept old twisted log files
-* `BUILDBOT_LOG_SIZE` (default: `10000000`): Size at which to rotate twisted log files
-* `BUILDBOT_NOLOGROTATE` (optional): Do not permit buildmaster rotate logs by itself.
-
-#### Environment (stage: start)
-
-The following environment variables are only available if the Makejail has copied the `master.cfg` file from this repository, but remember that you can put any environment variable you want in your own file.
-
-* `BUILDBOT_WORKER_NAME` (default: `example-worker`).
-* `BUILDBOT_WORKER_PASS` (default: `pass`).
-* `BUILDBOT_WORKER_PORT` (default: `9989`).
-* `BUILDBOT_WEB_TITLE` (default: `Hello World CI`).
-* `BUILDBOT_WEB_TITLEURL` (default: `https://buildbot.github.io/hello-world/`).
-* `BUILDBOT_WEB_URL` (default: `http://localhost:8010/`).
-* `BUILDBOT_WEB_PORT` (default: `8010`).
-* `BUILDBOT_DB` (default: `sqlite:///state.sqlite`).
-
-### worker
-
-```sh
-mkdir -p .volumes/buildbot-worker/db
-appjail makejail \
-    -j buildbot-worker \
-    -f "gh+AppJail-makejails/buildbot --file worker.makejail" \
+```console
+$ appjail oci run -Pd \
+    -o overwrite=force \
     -o virtualnet=":<random> default" \
     -o nat \
-    -o fstab="$PWD/.volumes/buildbot-worker/db buildbot-db <volumefs>" \
-    -V BUILDBOT_MASTER="buildbot-master" \
-    -V BUILDBOT_WORKER_NAME="example-worker" \
-    -V BUILDBOT_WORKER_PASS="pass"
-appjail start buildbot-worker
-appjail pkg jail buildbot-worker install -y git-tiny # if you want to use git(1)
+    -e BUILDMASTER=buildbot-master \
+    -e BUILDMASTER_PORT=9989 \
+    -e WORKERNAME=example-worker \
+    -e WORKERPASS=pass \
+    -e WORKER_ENVIRONMENT_BLACKLIST="DOCKER_BUILDBOT* BUILDBOT_ENV_* BUILDBOT_1* WORKER_ENVIRONMENT_BLACKLIST" \
+    -o pkg=git-tiny \
+    -o pkg=py312-pyflakes \
+    ghcr.io/appjail-makejails/buildbot:15.1-worker buildbot-worker
 ```
 
-#### Arguments
+---
 
-* `buildbot_worker_tag` (default: `14.3-worker`): see [#tags](#tags).
-* `buildbot_worker_ajspec` (default: `gh+AppJail-makejails/buildbot`): Entry point where the `appjail-ajspec(5)` file is located.
+You should now be able to go to http://buildbot-master:8010 and see a web page similar to:
 
-#### Environment
+![](https://docs.buildbot.net/latest/_images/index.png)
 
-* `BUILDBOT_INFO_ADMIN` (optional): Admin contact in a syntax like `[name] <[email]>`.
-* `BUILDBOT_INFO_HOST` (optional): Description of the build.
-* `BUILDBOT_KEEPALIVE` (default: `600`): Interval at which keepalives should be sent.
-* `BUILDBOT_LOG_COUNT` (default: `10`): Limit the number of kept old twisted log files.
-* `BUILDBOT_MAXDELAY` (default: `300`): Maximum time between connection attempts.
-* `BUILDBOT_MAXRETRIES` (optional): Maximum number of retries before worker
-* `BUILDBOT_NOLOGROTATE` (optional): Do not permit buildmaster rotate logs by itself.
-* `BUILDBOT_NUMCPUS` (optional): Number of available cpus to use on a build.
-* `BUILDBOT_PROTOCOL` (default: `pb`): Protocol to be used when creating master-worker connection.
-* `BUILDBOT_PROXY_CONNECTION` (optional): Address of HTTP proxy to tunnel through.
-* `BUILDBOT_LOG_SIZE` (default: `10000000`): Size at which to rotate twisted log files.
-* `BUILDBOT_UMASK` (optional): Controls permissions of generated files.
-* `BUILDBOT_USE_TLS` (optional): Uses TLS to connect to master.
-* `BUILDBOT_MASTER` (mandatory): Address and (optionally) port of the master.
-* `BUILDBOT_WORKER_NAME` (mandatory): Worker name.
-* `BUILDBOT_WORKER_PASS` (mandatory): Password.
+Click on “Builds” at the left to open the submenu and then [Builders](http://buildbot-master:8010/#/builders) to see that the worker you just started has connected to the master:
 
-### Check current status
+![](https://docs.buildbot.net/latest/_images/builders.png)
 
-The custom stage `buildbot_status` can be used to run `top(1)` to check the status of BuildBot.
+### Arguments (stage: build)
 
-```sh
-appjail run -s buildbot_status buildbot-master # or buildbot-worker
+* `buildbot_from` (default: `ghcr.io/appjail-makejails/buildbot`): Location of OCI image. See also [OCI Configuration](#oci-configuration).
+* `buildbot_tag` (default: `latest`): OCI image tag. See also [OCI Configuration](#oci-configuration).
+
+### Environment (OCI image)
+
+* `PGID` (default: `1000`): Equivalent to `PUID` but for the Process Group ID.
+* `PUID` (default: `1000`): Process User ID for the container's main process, allowing you to match the owner of files written to mounted host volumes to your host system's user. Writable volumes are changed based on this environment variable.
+
+## OCI Configuration
+
+```yaml
+build:
+  variants:
+    - tag: 15.1-master
+      containerfile: Containerfile.master
+      aliases: ["latest"]
+      default: true
+      args:
+        FREEBSD_RELEASE: "15.1"
+        PYVER: "312"
+        NO_PKGCLEAN: "1"
+      cache_dirs: ["pkgcache0:/var/cache/pkg"]
+    - tag: 15.1-worker
+      containerfile: Containerfile.worker
+      args:
+        FREEBSD_RELEASE: "15.1"
+        PYVER: "312"
+        NO_PKGCLEAN: "1"
+      cache_dirs: ["pkgcache0:/var/cache/pkg"]
 ```
-
-### Log
-
-To view the log generated by the web application, run the custom stage `buildbot_log`.
-
-```sh
-appjail run -s buildbot_log buildbot-master # or buildbot-worker
-```
-
-### Volumes
-
-| Name        | Owner | Group | Perm | Type | Mountpoint        |
-| ----------- | ----- | ----- | ---- | ---- | ----------------- |
-| buildbot-db | 870   | 870   |  -   |  -   | /var/db/buildbot  |
-
-## Tags
-
-| Tag    | Arch    | Version        | Type   |
-| ------ | ------- | -------------- | ------ |
-| `14.3-master` | `amd64` | `14.3-RELEASE` | `thin` |
-| `14.3-worker` | `amd64` | `14.3-RELEASE` | `thin` |
-| `15-master` | `amd64` | `15` | `thin` |
-| `15-worker` | `amd64` | `15` | `thin` |
