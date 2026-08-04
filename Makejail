@@ -1,5 +1,6 @@
 ARG buildbot_from=ghcr.io/appjail-makejails/buildbot
 ARG buildbot_tag=latest
 
+OPTION container=boot
 OPTION overwrite=force
 OPTION from=${buildbot_from}:${buildbot_tag}
