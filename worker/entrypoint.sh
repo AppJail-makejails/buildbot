@@ -11,7 +11,7 @@ if [ "$1" = "twistd" ]; then
         cp /src/buildbot.tac /buildbot
     fi
 
-    chown -R noroot:noroot /buildbot
+    change_owner /buildbot
 
     set -- su-exec noroot "$@"
 fi
